@@ -3,12 +3,21 @@
  * Design: Floating glass perfume bottles in a warm void
  * Philosophy: Restrained luxury — bottles as sculptural objects
  * Tech: React Three Fiber + @react-three/drei
+ *
+ * Mouse Parallax:
+ *   - Global mouse position (normalized -1..1) is captured via a DOM listener
+ *   - useFrame smoothly lerps a "target" group rotation toward the mouse
+ *   - Each bottle also has a subtle individual offset for depth layering
+ *   - On mobile / touch devices the effect is disabled
  */
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Float, Environment, MeshTransmissionMaterial } from "@react-three/drei";
 import * as THREE from "three";
+
+// ── Shared mouse state (module-level, updated by DOM listener) ────
+const mouse = { x: 0, y: 0 };
 
 // ── Bottle shape: lathe geometry ─────────────────────────────────
 function PerfumeBottle({
@@ -29,11 +38,9 @@ function PerfumeBottle({
   const meshRef = useRef<THREE.Mesh>(null);
   const liquidRef = useRef<THREE.Mesh>(null);
 
-  // Different bottle profiles
   const points = useMemo(() => {
     const pts: THREE.Vector2[] = [];
     if (bottleStyle === "classic") {
-      // Rectangular-ish classic bottle
       pts.push(new THREE.Vector2(0.0, 0.0));
       pts.push(new THREE.Vector2(0.36, 0.0));
       pts.push(new THREE.Vector2(0.38, 0.04));
@@ -41,21 +48,17 @@ function PerfumeBottle({
       pts.push(new THREE.Vector2(0.4, 0.8));
       pts.push(new THREE.Vector2(0.38, 1.1));
       pts.push(new THREE.Vector2(0.34, 1.35));
-      // Shoulder curve
       pts.push(new THREE.Vector2(0.25, 1.5));
       pts.push(new THREE.Vector2(0.15, 1.62));
-      // Neck
       pts.push(new THREE.Vector2(0.1, 1.72));
       pts.push(new THREE.Vector2(0.09, 1.9));
       pts.push(new THREE.Vector2(0.09, 2.05));
-      // Cap
       pts.push(new THREE.Vector2(0.13, 2.08));
       pts.push(new THREE.Vector2(0.15, 2.12));
       pts.push(new THREE.Vector2(0.15, 2.55));
       pts.push(new THREE.Vector2(0.13, 2.58));
       pts.push(new THREE.Vector2(0.0, 2.58));
     } else if (bottleStyle === "round") {
-      // Rounded feminine bottle
       pts.push(new THREE.Vector2(0.0, 0.0));
       pts.push(new THREE.Vector2(0.3, 0.0));
       pts.push(new THREE.Vector2(0.42, 0.1));
@@ -73,7 +76,6 @@ function PerfumeBottle({
       pts.push(new THREE.Vector2(0.12, 2.53));
       pts.push(new THREE.Vector2(0.0, 2.53));
     } else {
-      // Tall slender bottle
       pts.push(new THREE.Vector2(0.0, 0.0));
       pts.push(new THREE.Vector2(0.28, 0.0));
       pts.push(new THREE.Vector2(0.3, 0.04));
@@ -93,7 +95,6 @@ function PerfumeBottle({
     return pts;
   }, [bottleStyle]);
 
-  // Liquid fill geometry (slightly smaller, inside the bottle)
   const liquidPoints = useMemo(() => {
     if (bottleStyle === "classic") {
       return [
@@ -122,41 +123,25 @@ function PerfumeBottle({
     ];
   }, [bottleStyle]);
 
-  const geometry = useMemo(
-    () => new THREE.LatheGeometry(points, 64),
-    [points]
-  );
+  const geometry = useMemo(() => new THREE.LatheGeometry(points, 64), [points]);
+  const liquidGeometry = useMemo(() => new THREE.LatheGeometry(liquidPoints, 48), [liquidPoints]);
 
-  const liquidGeometry = useMemo(
-    () => new THREE.LatheGeometry(liquidPoints, 48),
-    [liquidPoints]
-  );
-
+  // Slow self-rotation (Y axis only)
   useFrame((state) => {
     if (!meshRef.current) return;
     const t = state.clock.elapsedTime + rotationOffset;
     meshRef.current.rotation.y = t * 0.25;
-    if (liquidRef.current) {
-      liquidRef.current.rotation.y = t * 0.25;
-    }
+    if (liquidRef.current) liquidRef.current.rotation.y = t * 0.25;
   });
 
   const capHeight = bottleStyle === "tall" ? 0.58 : 0.48;
-  const capY = bottleStyle === "tall" ? 2.55 : (bottleStyle === "round" ? 2.3 : 2.32);
+  const capY = bottleStyle === "tall" ? 2.55 : bottleStyle === "round" ? 2.3 : 2.32;
 
   return (
     <group position={position} scale={scale}>
-      {/* Liquid fill */}
       <mesh ref={liquidRef} geometry={liquidGeometry}>
-        <meshStandardMaterial
-          color={liquidColor}
-          transparent
-          opacity={0.75}
-          roughness={0.1}
-          metalness={0.0}
-        />
+        <meshStandardMaterial color={liquidColor} transparent opacity={0.75} roughness={0.1} metalness={0.0} />
       </mesh>
-      {/* Glass bottle */}
       <mesh ref={meshRef} geometry={geometry} castShadow>
         <MeshTransmissionMaterial
           color={glassColor}
@@ -175,15 +160,9 @@ function PerfumeBottle({
           envMapIntensity={1.8}
         />
       </mesh>
-      {/* Metal cap */}
       <mesh position={[0, capY, 0]} castShadow>
         <cylinderGeometry args={[0.17, 0.17, capHeight, 32]} />
-        <meshStandardMaterial
-          color="#C8A96E"
-          metalness={0.95}
-          roughness={0.08}
-          envMapIntensity={2}
-        />
+        <meshStandardMaterial color="#C8A96E" metalness={0.95} roughness={0.08} envMapIntensity={2} />
       </mesh>
     </group>
   );
@@ -229,6 +208,41 @@ function Particles({ count = 80 }: { count?: number }) {
   );
 }
 
+// ── Parallax group — wraps all bottles and particles ──────────────
+// Smoothly lerps toward mouse position each frame.
+// Depth layers: center bottle has full effect, side bottles have
+// slightly different multipliers to create a sense of 3-D depth.
+function ParallaxGroup({ children }: { children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null);
+  // current interpolated values
+  const current = useRef({ rx: 0, ry: 0, px: 0, py: 0 });
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const c = current.current;
+    const lerpFactor = 0.045; // lower = smoother / lazier
+
+    // Target: tilt toward mouse (X mouse → Y rotation, Y mouse → X rotation)
+    const targetRy =  mouse.x * 0.18;   // horizontal mouse → yaw
+    const targetRx = -mouse.y * 0.12;   // vertical mouse → pitch
+    // Subtle translation parallax
+    const targetPx =  mouse.x * 0.25;
+    const targetPy = -mouse.y * 0.15;
+
+    c.ry += (targetRy - c.ry) * lerpFactor;
+    c.rx += (targetRx - c.rx) * lerpFactor;
+    c.px += (targetPx - c.px) * lerpFactor;
+    c.py += (targetPy - c.py) * lerpFactor;
+
+    groupRef.current.rotation.y = c.ry;
+    groupRef.current.rotation.x = c.rx;
+    groupRef.current.position.x = c.px;
+    groupRef.current.position.y = c.py;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
 // ── Scene ─────────────────────────────────────────────────────────
 function Scene() {
   const { viewport } = useThree();
@@ -246,47 +260,50 @@ function Scene() {
       <pointLight position={[0, -3, 2]} intensity={0.6} color="#C4975A" />
       <Environment preset="studio" />
 
-      <Particles count={isMobile ? 40 : 80} />
+      {/* Everything inside ParallaxGroup reacts to mouse */}
+      <ParallaxGroup>
+        <Particles count={isMobile ? 40 : 80} />
 
-      {/* Center bottle — classic amber */}
-      <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.7}>
-        <PerfumeBottle
-          position={[0, -0.6, 0]}
-          liquidColor="#C4975A"
-          glassColor="#e8dfd0"
-          scale={isMobile ? 0.52 : 0.68}
-          rotationOffset={0}
-          bottleStyle="classic"
-        />
-      </Float>
+        {/* Center bottle — classic amber */}
+        <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.7}>
+          <PerfumeBottle
+            position={[0, -0.6, 0]}
+            liquidColor="#C4975A"
+            glassColor="#e8dfd0"
+            scale={isMobile ? 0.52 : 0.68}
+            rotationOffset={0}
+            bottleStyle="classic"
+          />
+        </Float>
 
-      {!isMobile && (
-        <>
-          {/* Left bottle — rose */}
-          <Float speed={1.1} rotationIntensity={0.2} floatIntensity={0.5}>
-            <PerfumeBottle
-              position={[-3.8, -0.4, -1.5]}
-              liquidColor="#E8A0A8"
-              glassColor="#f0e8e8"
-              scale={0.46}
-              rotationOffset={2.1}
-              bottleStyle="round"
-            />
-          </Float>
+        {!isMobile && (
+          <>
+            {/* Left bottle — rose (deeper layer, slightly less parallax via position offset) */}
+            <Float speed={1.1} rotationIntensity={0.2} floatIntensity={0.5}>
+              <PerfumeBottle
+                position={[-3.8, -0.4, -1.5]}
+                liquidColor="#E8A0A8"
+                glassColor="#f0e8e8"
+                scale={0.46}
+                rotationOffset={2.1}
+                bottleStyle="round"
+              />
+            </Float>
 
-          {/* Right bottle — noir */}
-          <Float speed={1.7} rotationIntensity={0.35} floatIntensity={0.9}>
-            <PerfumeBottle
-              position={[3.8, -0.3, -2]}
-              liquidColor="#3A2A1A"
-              glassColor="#d8d0c8"
-              scale={0.5}
-              rotationOffset={4.2}
-              bottleStyle="tall"
-            />
-          </Float>
-        </>
-      )}
+            {/* Right bottle — noir (deepest layer) */}
+            <Float speed={1.7} rotationIntensity={0.35} floatIntensity={0.9}>
+              <PerfumeBottle
+                position={[3.8, -0.3, -2]}
+                liquidColor="#3A2A1A"
+                glassColor="#d8d0c8"
+                scale={0.5}
+                rotationOffset={4.2}
+                bottleStyle="tall"
+              />
+            </Float>
+          </>
+        )}
+      </ParallaxGroup>
 
       <OrbitControls
         enableZoom={false}
@@ -303,6 +320,31 @@ function Scene() {
 
 // ── Export ────────────────────────────────────────────────────────
 export default function FragranceCanvas() {
+  // Attach a single mousemove listener to the document; update module-level mouse state
+  useEffect(() => {
+    const isTouchDevice = window.matchMedia("(hover: none)").matches;
+    if (isTouchDevice) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalize to -1 .. 1
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+
+    // Smoothly reset when mouse leaves the window
+    const handleMouseLeave = () => {
+      mouse.x = 0;
+      mouse.y = 0;
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mouseleave", handleMouseLeave);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
   return (
     <Canvas
       camera={{ fov: 42, near: 0.1, far: 100, position: [0, 1, 9] }}
