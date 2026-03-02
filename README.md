@@ -2,7 +2,9 @@
 
 > *A luxury perfume brand website inspired by [silencio.es](https://silencio.es), built with React 19, GSAP, and React Three Fiber.*
 
-![Hero Section](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/01-hero_08fb434c.webp)
+<p align="center">
+  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/sillage-final_8e33a269.gif" alt="SILLAGE Demo" width="100%" />
+</p>
 
 ---
 
