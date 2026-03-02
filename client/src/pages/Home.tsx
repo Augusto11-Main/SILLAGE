@@ -112,14 +112,33 @@ function splitTextToChars(el: HTMLElement) {
 }
 
 function splitTextToWords(el: HTMLElement) {
-  const text = el.textContent || "";
-  el.innerHTML = text
-    .split(" ")
-    .map(
-      (word) =>
-        `<span class="word" style="display:inline-block;overflow:hidden"><span class="wordin" style="display:inline-block">${word}</span></span>`
-    )
-    .join(" ");
+  // Walk text nodes only — preserves em/br/other tags
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || "";
+      if (!text.trim()) return;
+      const frag = document.createDocumentFragment();
+      text.split(/(\s+)/).forEach((part) => {
+        if (/^\s+$/.test(part)) {
+          frag.appendChild(document.createTextNode(part));
+        } else if (part) {
+          const outer = document.createElement("span");
+          outer.className = "word";
+          outer.style.cssText = "display:inline-block;overflow:hidden";
+          const inner = document.createElement("span");
+          inner.className = "wordin";
+          inner.style.cssText = "display:inline-block";
+          inner.textContent = part;
+          outer.appendChild(inner);
+          frag.appendChild(outer);
+        }
+      });
+      node.parentNode?.replaceChild(frag, node);
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      Array.from(node.childNodes).forEach(walk);
+    }
+  };
+  Array.from(el.childNodes).forEach(walk);
   return el.querySelectorAll<HTMLElement>(".wordin");
 }
 
@@ -130,7 +149,7 @@ export default function Home() {
   const preloaderLineRef = useRef<HTMLDivElement>(null);
   const preloaderCountRef = useRef<HTMLSpanElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const heroBottleRef = useRef<HTMLImageElement>(null);
+  const heroBottleRef = useRef<HTMLDivElement>(null);
   const heroGlowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -161,7 +180,8 @@ export default function Home() {
       const bottle = heroBottleRef.current;
       const glow = heroGlowRef.current;
       if (bottle) {
-        bottle.style.transform = `translateY(-50%) translate(${heroX * 18}px, ${heroY * 12}px) rotate(${heroX * 1.5}deg)`;
+        // Apply parallax on the wrap; translateY(-50%) is the CSS baseline for vertical centering
+        bottle.style.transform = `translateY(calc(-50% + ${heroY * 12}px)) translateX(${heroX * 18}px) rotate(${heroX * 1.5}deg)`;
       }
       if (glow) {
         glow.style.transform = `translate(${heroX * 30}px, ${heroY * 20}px)`;
@@ -272,8 +292,8 @@ export default function Home() {
         ease: "none",
       });
 
-      // Hero bottle entrance
-      gsap.from(".landing-bottle-wrap", {
+      // Hero bottle entrance — animate the img inside, not the wrap (wrap uses RAF transform)
+      gsap.from(".landing-bottle", {
         y: 40,
         opacity: 0,
         duration: 1.4,
@@ -503,11 +523,10 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="landing-bottle-wrap">
+            <div className="landing-bottle-wrap" ref={heroBottleRef}>
               <div className="landing-bottle-glow" ref={heroGlowRef} />
               <img
                 className="landing-bottle"
-                ref={heroBottleRef}
                 src={HERO_BOTTLE}
                 alt="Ambre Doré perfume bottle"
                 loading="eager"
