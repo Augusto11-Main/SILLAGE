@@ -176,12 +176,16 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  padding: 2rem 3rem;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  mix-blend-mode: multiply;
+  padding: 1.8rem 3rem;
+  background: rgba(235,235,235,0.72);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid rgba(196,151,90,0.12);
+  transition: background 0.4s ease;
 }
 
 .nav-logo {
@@ -268,14 +272,45 @@
   overflow: hidden;
 }
 
-.landing-bottle {
+/* Bottle wrapper — positions the bottle and glow together */
+.landing-bottle-wrap {
   position: absolute;
   right: 8%;
   top: 50%;
   transform: translateY(-50%);
-  width: min(380px, 35vw);
+  width: min(400px, 36vw);
+  height: auto;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Ambient glow behind the bottle */
+.landing-bottle-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(ellipse at center, rgba(196,151,90,0.22) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  filter: blur(30px);
+}
+
+.landing-bottle {
+  position: relative;
+  width: 100%;
   height: auto;
   object-fit: contain;
+  filter: drop-shadow(0 60px 100px rgba(0,0,0,0.18)) drop-shadow(0 20px 40px rgba(196,151,90,0.12));
+  will-change: transform;
+  transition: filter 0.6s ease;
+}
+
+.landing-bottle:hover {
+  filter: drop-shadow(0 80px 120px rgba(0,0,0,0.22)) drop-shadow(0 30px 60px rgba(196,151,90,0.2));
 }
 
 .landing-text {
@@ -392,6 +427,20 @@
   overflow: hidden;
 }
 
+/* Alternate: even cards flip bottle to right */
+.etiqueta:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.etiqueta:nth-child(even) .etiqueta-content {
+  padding: 4rem 0 4rem 3rem;
+}
+
+/* Subtle background accent per card */
+.etiqueta:nth-child(1) { background: var(--warm-white); }
+.etiqueta:nth-child(2) { background: #F0EBE3; }
+.etiqueta:nth-child(3) { background: #E8E4E0; }
+
 .etiqueta-number {
   position: absolute;
   top: 3rem;
@@ -416,12 +465,14 @@
   max-width: 320px;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 40px 80px rgba(0,0,0,0.12));
-  transition: transform 0.6s ease;
+  filter: drop-shadow(0 40px 80px rgba(0,0,0,0.14)) drop-shadow(0 10px 30px rgba(196,151,90,0.08));
+  transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1), filter 0.6s ease;
+  will-change: transform;
 }
 
 .etiqueta-bottle img:hover {
-  transform: scale(1.03) rotate(2deg);
+  transform: scale(1.04) rotate(3deg) translateY(-8px);
+  filter: drop-shadow(0 60px 100px rgba(0,0,0,0.2)) drop-shadow(0 20px 50px rgba(196,151,90,0.15));
 }
 
 .etiqueta-content {
@@ -432,11 +483,18 @@
 /* The "product label" card — core design element */
 .label-card {
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
   padding: 2.5rem;
   position: relative;
   max-width: 520px;
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+.label-card:hover {
+  box-shadow: 0 24px 60px rgba(0,0,0,0.08), 0 4px 16px rgba(196,151,90,0.1);
+  transform: translateY(-4px);
 }
 
 .label-card::before {
@@ -446,9 +504,14 @@
   left: 0.5rem;
   right: -0.5rem;
   bottom: -0.5rem;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(196,151,90,0.25);
   pointer-events: none;
   z-index: -1;
+  transition: border-color 0.4s ease;
+}
+
+.label-card:hover::before {
+  border-color: rgba(196,151,90,0.5);
 }
 
 .label-header {
@@ -673,6 +736,63 @@
 }
 
 /* ============================================
+   SECTION: 3D SCENE
+   ============================================ */
+.scene3d-section {
+  width: 100%;
+  height: 80vh;
+  position: relative;
+  background: #1A1A1A;
+  overflow: hidden;
+}
+
+.scene3d-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 4rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scene3d-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(196,151,90,0.6);
+  margin-bottom: 1.5rem;
+  animation: scene-label-blink 3s ease-in-out infinite;
+}
+
+@keyframes scene-label-blink {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.scene3d-title-wrap {
+  overflow: hidden;
+}
+
+.scene3d-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 4vw, 3.5rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: rgba(245,240,232,0.85);
+  text-align: center;
+}
+
+.scene3d-title em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+/* ============================================
    SECTION: INGREDIENTS
    ============================================ */
 #ingredients {
@@ -711,13 +831,23 @@
 }
 
 .ingredient-item {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.82);
   padding: 2.5rem 2rem;
   border: 1px solid var(--border);
-  transition: background 0.3s;
+  transition: background 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+  cursor: default;
 }
 
-.ingredient-item:hover { background: rgba(255,255,255,1); }
+.ingredient-item:hover {
+  background: rgba(255,255,255,1);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.08), 0 4px 12px rgba(196,151,90,0.1);
+  border-color: rgba(196,151,90,0.3);
+}
+
+.ingredient-item:hover .ingredient-name {
+  color: var(--gold);
+}
 
 .ingredient-num {
   font-family: 'DM Mono', monospace;
@@ -770,6 +900,38 @@
   overflow: hidden;
   background: var(--charcoal);
   gap: 1.5rem;
+}
+
+/* Radial gold glow in the background */
+#final::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(ellipse at center, rgba(196,151,90,0.12) 0%, transparent 65%);
+  pointer-events: none;
+  animation: final-pulse 6s ease-in-out infinite;
+}
+
+@keyframes final-pulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* Decorative horizontal rule above title */
+#final::after {
+  content: '';
+  position: absolute;
+  top: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3rem;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
 }
 
 .final-title {
@@ -875,14 +1037,17 @@
 @media (max-width: 1024px) {
   #nav { padding: 1.5rem 1.5rem; }
   #landing { padding: 0 1.5rem 6rem; }
-  .landing-bottle { width: min(280px, 45vw); }
-  .etiqueta { flex-direction: column; padding: 6rem 1.5rem; }
+  .landing-bottle-wrap { width: min(280px, 45vw); }
+  /* Reset alternating layout on tablet/mobile */
+  .etiqueta { flex-direction: column !important; padding: 6rem 1.5rem; }
+  .etiqueta:nth-child(even) .etiqueta-content { padding: 0; }
   .etiqueta-bottle { flex: none; width: 100%; padding: 2rem; }
   .etiqueta-content { flex: none; width: 100%; padding: 0; }
   #atelier { grid-template-columns: 1fr; }
   .atelier-image-wrap { height: 50vh; }
   .atelier-text { padding: 4rem 1.5rem; }
   .ingredients-grid { grid-template-columns: 1fr 1fr; }
+  .scene3d-section { height: 60vh; }
   #cursor, #cursor-ring { display: none; }
   body { cursor: auto; }
   a, button { cursor: pointer; }
@@ -891,6 +1056,8 @@
 @media (max-width: 640px) {
   .ingredients-grid { grid-template-columns: 1fr; }
   .landing-title { font-size: clamp(2.5rem, 14vw, 5rem); }
-  .landing-bottle { display: none; }
+  .landing-bottle-wrap { display: none; }
   .landing-text { max-width: 100%; }
+  .scene3d-section { height: 50vh; }
+  .scene3d-title { font-size: clamp(1.4rem, 6vw, 2rem); }
 }

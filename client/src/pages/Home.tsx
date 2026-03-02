@@ -130,12 +130,18 @@ export default function Home() {
   const preloaderLineRef = useRef<HTMLDivElement>(null);
   const preloaderCountRef = useRef<HTMLSpanElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const heroBottleRef = useRef<HTMLImageElement>(null);
+  const heroGlowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // ── Custom cursor ──────────────────────────────────────────────
     const cursor = cursorRef.current;
     const ring = cursorRingRef.current;
     let mx = 0, my = 0, rx = 0, ry = 0;
+
+    // Hero bottle parallax state
+    let heroX = 0, heroY = 0, heroTX = 0, heroTY = 0;
+    let heroRafId: number;
 
     const moveCursor = (e: MouseEvent) => {
       mx = e.clientX;
@@ -144,7 +150,25 @@ export default function Home() {
         cursor.style.left = mx + "px";
         cursor.style.top = my + "px";
       }
+      // Update hero parallax target (normalized -1..1)
+      heroTX = ((e.clientX / window.innerWidth) - 0.5) * 2;
+      heroTY = ((e.clientY / window.innerHeight) - 0.5) * 2;
     };
+
+    const animHeroParallax = () => {
+      heroX += (heroTX - heroX) * 0.06;
+      heroY += (heroTY - heroY) * 0.06;
+      const bottle = heroBottleRef.current;
+      const glow = heroGlowRef.current;
+      if (bottle) {
+        bottle.style.transform = `translateY(-50%) translate(${heroX * 18}px, ${heroY * 12}px) rotate(${heroX * 1.5}deg)`;
+      }
+      if (glow) {
+        glow.style.transform = `translate(${heroX * 30}px, ${heroY * 20}px)`;
+      }
+      heroRafId = requestAnimationFrame(animHeroParallax);
+    };
+    animHeroParallax();
 
     const animRing = () => {
       rx += (mx - rx) * 0.12;
@@ -236,16 +260,45 @@ export default function Home() {
         });
       }
 
-      // Hero bottle parallax
-      gsap.to(".landing-bottle", {
+      // Hero bottle wrap parallax (scroll)
+      gsap.to(".landing-bottle-wrap", {
         scrollTrigger: {
           trigger: "#landing",
           start: "top top",
           end: "bottom top",
           scrub: 0.5,
         },
-        y: -120,
+        y: -80,
         ease: "none",
+      });
+
+      // Hero bottle entrance
+      gsap.from(".landing-bottle-wrap", {
+        y: 40,
+        opacity: 0,
+        duration: 1.4,
+        ease: "power4.out",
+        delay: 0.8,
+      });
+
+      // 3D scene title
+      const scene3dTitle = document.querySelector<HTMLElement>(".scene3d-title");
+      if (scene3dTitle) {
+        const words = splitTextToWords(scene3dTitle);
+        gsap.from(words, {
+          scrollTrigger: { trigger: ".scene3d-section", start: "top 80%" },
+          y: "110%",
+          duration: 1,
+          ease: "power4.out",
+          stagger: 0.06,
+        });
+      }
+      gsap.from(".scene3d-label", {
+        scrollTrigger: { trigger: ".scene3d-section", start: "top 80%" },
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out",
       });
 
       // Fragrance card titles
@@ -392,6 +445,7 @@ export default function Home() {
     return () => {
       document.removeEventListener("mousemove", moveCursor);
       ScrollTrigger.getAll().forEach((t) => t.kill());
+      cancelAnimationFrame(heroRafId);
     };
   }, []);
 
@@ -449,12 +503,16 @@ export default function Home() {
               </a>
             </div>
 
-            <img
-              className="landing-bottle"
-              src={HERO_BOTTLE}
-              alt="Ambre Doré perfume bottle"
-              loading="eager"
-            />
+            <div className="landing-bottle-wrap">
+              <div className="landing-bottle-glow" ref={heroGlowRef} />
+              <img
+                className="landing-bottle"
+                ref={heroBottleRef}
+                src={HERO_BOTTLE}
+                alt="Ambre Doré perfume bottle"
+                loading="eager"
+              />
+            </div>
 
             <div className="scroll-indicator">
               <span>Scroll</span>
@@ -521,27 +579,13 @@ export default function Home() {
           </div>
 
           {/* ── 3D CANVAS INTERLUDE ───────────────────────────── */}
-          <section style={{ width: "100%", height: "60vh", position: "relative", background: "var(--warm-white)" }}>
+          <section className="scene3d-section" id="scene3d">
             <FragranceCanvas />
-            <div style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-            }}>
-              <p style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(1rem, 2vw, 1.5rem)",
-                fontWeight: 300,
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
-                color: "var(--charcoal)",
-                opacity: 0.35,
-              }}>
-                Drag to explore
-              </p>
+            <div className="scene3d-overlay">
+              <p className="scene3d-label">Move your cursor to explore</p>
+              <div className="scene3d-title-wrap">
+                <h2 className="scene3d-title">Three Bottles.<br /><em>One Philosophy.</em></h2>
+              </div>
             </div>
           </section>
 

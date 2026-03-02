@@ -210,24 +210,29 @@ function Particles({ count = 80 }: { count?: number }) {
 
 // ── Parallax group — wraps all bottles and particles ──────────────
 // Smoothly lerps toward mouse position each frame.
-// Depth layers: center bottle has full effect, side bottles have
-// slightly different multipliers to create a sense of 3-D depth.
-function ParallaxGroup({ children }: { children: React.ReactNode }) {
+// `depthMultiplier` controls how strongly this layer reacts:
+//   1.0 = base (center bottle), 1.4 = left (mid layer), 1.7 = right (back layer)
+function ParallaxGroup({
+  children,
+  depthMultiplier = 1.0,
+  lerpFactor = 0.045,
+}: {
+  children: React.ReactNode;
+  depthMultiplier?: number;
+  lerpFactor?: number;
+}) {
   const groupRef = useRef<THREE.Group>(null);
-  // current interpolated values
   const current = useRef({ rx: 0, ry: 0, px: 0, py: 0 });
 
   useFrame(() => {
     if (!groupRef.current) return;
     const c = current.current;
-    const lerpFactor = 0.045; // lower = smoother / lazier
+    const m = depthMultiplier;
 
-    // Target: tilt toward mouse (X mouse → Y rotation, Y mouse → X rotation)
-    const targetRy =  mouse.x * 0.18;   // horizontal mouse → yaw
-    const targetRx = -mouse.y * 0.12;   // vertical mouse → pitch
-    // Subtle translation parallax
-    const targetPx =  mouse.x * 0.25;
-    const targetPy = -mouse.y * 0.15;
+    const targetRy =  mouse.x * 0.18 * m;
+    const targetRx = -mouse.y * 0.12 * m;
+    const targetPx =  mouse.x * 0.25 * m;
+    const targetPy = -mouse.y * 0.15 * m;
 
     c.ry += (targetRy - c.ry) * lerpFactor;
     c.rx += (targetRx - c.rx) * lerpFactor;
@@ -260,11 +265,13 @@ function Scene() {
       <pointLight position={[0, -3, 2]} intensity={0.6} color="#C4975A" />
       <Environment preset="studio" />
 
-      {/* Everything inside ParallaxGroup reacts to mouse */}
-      <ParallaxGroup>
+      {/* Particles — base layer, slow parallax */}
+      <ParallaxGroup depthMultiplier={0.6} lerpFactor={0.03}>
         <Particles count={isMobile ? 40 : 80} />
+      </ParallaxGroup>
 
-        {/* Center bottle — classic amber */}
+      {/* Center bottle — 1× parallax (base) */}
+      <ParallaxGroup depthMultiplier={1.0} lerpFactor={0.045}>
         <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.7}>
           <PerfumeBottle
             position={[0, -0.6, 0]}
@@ -275,10 +282,12 @@ function Scene() {
             bottleStyle="classic"
           />
         </Float>
+      </ParallaxGroup>
 
-        {!isMobile && (
-          <>
-            {/* Left bottle — rose (deeper layer, slightly less parallax via position offset) */}
+      {!isMobile && (
+        <>
+          {/* Left bottle — 1.4× parallax (mid depth) */}
+          <ParallaxGroup depthMultiplier={1.4} lerpFactor={0.038}>
             <Float speed={1.1} rotationIntensity={0.2} floatIntensity={0.5}>
               <PerfumeBottle
                 position={[-3.8, -0.4, -1.5]}
@@ -289,8 +298,10 @@ function Scene() {
                 bottleStyle="round"
               />
             </Float>
+          </ParallaxGroup>
 
-            {/* Right bottle — noir (deepest layer) */}
+          {/* Right bottle — 1.7× parallax (back layer) */}
+          <ParallaxGroup depthMultiplier={1.7} lerpFactor={0.032}>
             <Float speed={1.7} rotationIntensity={0.35} floatIntensity={0.9}>
               <PerfumeBottle
                 position={[3.8, -0.3, -2]}
@@ -301,9 +312,9 @@ function Scene() {
                 bottleStyle="tall"
               />
             </Float>
-          </>
-        )}
-      </ParallaxGroup>
+          </ParallaxGroup>
+        </>
+      )}
 
       <OrbitControls
         enableZoom={false}
