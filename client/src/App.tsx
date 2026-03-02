@@ -27,7 +27,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider
-        defaultTheme="light"
+        defaultTheme="light" // Sillage uses warm-white bg, light theme
         // switchable
       >
         <TooltipProvider>
