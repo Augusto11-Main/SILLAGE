@@ -1,154 +1,154 @@
-# SILLAGE — Olfactory Experiences
+# SILLAGE — 嗅觉体验
 
-> *A luxury perfume brand website inspired by [silencio.es](https://silencio.es), built with React 19, GSAP, and React Three Fiber.*
+> 一个受 [silencio.es](https://silencio.es) 启发的高端香水品牌网站，使用 React 19、GSAP 和 React Three Fiber 构建。
 
 <p align="center">
-  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/sillage-final_8e33a269.gif" alt="SILLAGE Demo" width="100%" />
+  <img src="docs/demo.gif" alt="SILLAGE 网站演示" width="100%" />
 </p>
 
 ---
 
-## Overview
+## 项目简介
 
-**SILLAGE** is an immersive, single-page luxury fragrance brand website that replicates the visual language and interaction philosophy of award-winning creative agency sites. The design philosophy — *Sensory Cartography* — treats each fragrance as a "sensory archive": a product label elevated into a sculptural object, presented through restrained typography, scroll-driven animation, and real-time 3D rendering.
+**SILLAGE**（法语：香水的余韵）是一个沉浸式单页高端香水品牌网站，复刻了 silencio.es 等创意机构网站的视觉语言与交互哲学。设计理念——**感官制图（Sensory Cartography）**——将每款香水视为一份"感官档案"：将产品标签升华为雕塑般的对象，通过克制的排版、滚动驱动动画和实时 3D 渲染呈现。
 
-The project demonstrates how modern frontend tooling (React 19 + Vite 7 + GSAP 3 + Three.js r160) can be combined to deliver a cinematic web experience without a backend.
-
----
-
-## Screenshots
-
-| Section | Preview |
-|---|---|
-| **Hero** — asymmetric layout, Cormorant Garamond display type, AI-generated bottle image with mouse parallax | ![Hero](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/01-hero_08fb434c.webp) |
-| **Ambre Doré** — product label card, formula composition bars, alternating layout | ![Ambre Doré](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/02-ambre-dore_7449dc68.webp) |
-| **Rose Éternelle** — reversed card layout, blush-toned background, round bottle | ![Rose Éternelle](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/03-rose-eternelle_3d0aa234.webp) |
-| **Nuit Absolue** — dark extrait card, obsidian bottle photography | ![Nuit Absolue](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/04-nuit-absolue_9993eea0.webp) |
-| **3D Scene** — three glass bottles rendered in real-time with mouse parallax depth layering | ![3D Scene](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/05-3d-scene_283bd7d3.webp) |
-| **Atelier** — editorial two-column layout, Grasse workshop photography | ![Atelier](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/06-atelier_fa304294.webp) |
-| **Ingredients** — six rare materials grid with hover elevation, textured background | ![Ingredients](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/07-ingredients_37034885.webp) |
-| **Final CTA** — dark charcoal section, gold radial glow, numbered edition copy | ![Final CTA](https://d2xsxph8kpxj0f.cloudfront.net/310519663394983076/V4Uif7KJBKhERR3pLJ3kwi/08-final-cta_1639b27a.webp) |
+本项目展示了如何将 React 19 + Vite 7 + GSAP 3 + Three.js 等现代前端工具链组合，在无需后端的情况下实现电影级网页体验。
 
 ---
 
-## Features
+## 页面截图
 
-### Animation & Interaction
-
-The animation layer is built entirely on **GSAP 3** with `ScrollTrigger`. Every section uses a distinct animation pattern: the Hero title employs a character-by-character `translateY` reveal (implemented via a custom DOM-walking `splitTextToChars` function that preserves HTML tags); product section titles use word-level staggered reveals; and the Atelier section uses a combined `x`-offset + opacity entrance. A custom **RAF-driven cursor** (dot + ring with separate lerp speeds) replaces the system cursor on desktop.
-
-### Mouse Parallax
-
-Two independent parallax systems run simultaneously. The **Hero parallax** uses `requestAnimationFrame` with a `0.06` lerp factor to translate the bottle image and its ambient glow layer in response to mouse position, preserving the CSS `translateY(-50%)` vertical-center baseline via `calc()`. The **3D scene parallax** operates inside React Three Fiber's render loop via `useFrame`, with three independent `ParallaxGroup` components at depth multipliers of `0.6×` (particles), `1.0×` (center bottle), `1.4×` (left bottle), and `1.7×` (right bottle), each with a slightly different lerp factor to simulate natural depth-of-field lag.
-
-### 3D Rendering
-
-The 3D scene is built with **React Three Fiber** and **@react-three/drei**. Each bottle is a `LatheGeometry` constructed from hand-tuned `Vector2` control points in three profiles: `classic` (rectangular shoulder), `round` (spherical body), and `tall` (slender column). The glass shell uses `MeshTransmissionMaterial` from drei with `transmission: 0.95`, `chromaticAberration: 0.04`, and `ior: 1.5` for physically-based glass refraction. A `Float` component from drei adds a subtle autonomous bobbing motion independent of the parallax system. Eighty instanced gold particles (`InstancedMesh`) orbit the scene using sinusoidal position offsets per frame.
-
-### Typography System
-
-| Role | Font | Weight | Usage |
-|---|---|---|---|
-| Display / Headings | Cormorant Garamond | 300 (Light) | Hero title, section titles, product names |
-| Accent / Italic | Cormorant Garamond | 300 Italic | Gold `<em>` elements in titles |
-| Body / UI | DM Sans | 400 | Descriptions, paragraph text |
-| Monospace / Labels | DM Mono | 400 | Eyebrows, nav links, formula labels, CTAs |
-
-All type sizes are defined as CSS custom properties (`--p1` through `--p5`) using `clamp()` for fluid scaling between mobile and desktop viewports.
+| 区域 | 预览 |
+|------|------|
+| **Hero** — 非对称布局、Cormorant Garamond 展示字体、AI 生成香水瓶图片 + 鼠标视差 | ![Hero](docs/01-hero.png) |
+| **Ambre Doré** — 产品标签卡片、配方成分进度条、交替布局 | ![Ambre Doré](docs/02-ambre-dore.png) |
+| **Rose Éternelle** — 反向卡片布局、粉调背景、圆润瓶身 | ![Rose Éternelle](docs/03-rose-eternelle.png) |
+| **Nuit Absolue** — 深色浓香卡片、黑曜石瓶身 | ![Nuit Absolue](docs/04-nuit-absolue.png) |
+| **3D 场景** — 三个玻璃香水瓶实时渲染，多层景深视差 | ![3D Scene](docs/05-3d-scene.png) |
+| **Atelier** — 编辑风双栏布局，格拉斯工坊摄影 | ![Atelier](docs/06-atelier.png) |
+| **原料** — 六种稀有原料网格，悬停升起效果，纹理背景 | ![Ingredients](docs/07-ingredients.png) |
+| **Final CTA** — 深炭色区域、金色径向光晕、限量版文案 | ![Final CTA](docs/08-final-cta.png) |
 
 ---
 
-## Tech Stack
+## 核心功能
 
-| Category | Technology | Version |
-|---|---|---|
-| Framework | React | 19.2 |
-| Build Tool | Vite | 7.x |
-| Routing | Wouter | 3.x |
-| Animation | GSAP + ScrollTrigger | 3.12 |
-| 3D Rendering | Three.js | r160 |
-| 3D React Bindings | React Three Fiber | 8.x |
-| 3D Helpers | @react-three/drei | 9.x |
-| Styling | Tailwind CSS v4 + Custom CSS | 4.x |
-| Language | TypeScript | 5.6 |
+### 动画与交互
+
+动画层完全基于 **GSAP 3** 和 `ScrollTrigger` 构建。每个区域使用独特的动画模式：Hero 标题采用逐字符 `translateY` 揭示动画（通过自定义 DOM 遍历函数 `splitTextToChars` 实现，保留 HTML 标签结构）；产品区域标题使用逐词交错揭示；Atelier 区域采用 `x` 偏移 + 透明度组合入场。桌面端使用自定义 **RAF 驱动光标**（圆点 + 圆环，各自独立的 lerp 速率）替代系统光标。
+
+### 鼠标视差
+
+两套独立的视差系统同时运行：
+
+- **Hero 视差**：使用 `requestAnimationFrame` + `0.06` lerp 系数，将香水瓶图片和环境光晕层响应鼠标位置进行位移，通过 `calc()` 保留 CSS `translateY(-50%)` 垂直居中基准值
+- **3D 场景视差**：在 React Three Fiber 的渲染循环中通过 `useFrame` 运行，三个独立 `ParallaxGroup` 组件的深度倍数分别为 `0.6×`（粒子）、`1.0×`（中心瓶）、`1.4×`（左瓶）、`1.7×`（右瓶），各自使用略有不同的 lerp 系数模拟自然景深延迟
+
+### 3D 渲染
+
+3D 场景使用 **React Three Fiber** 和 **@react-three/drei** 构建。每个瓶子是由手工调整的 `Vector2` 控制点构成的 `LatheGeometry`，分三种轮廓：`classic`（矩形肩部）、`round`（球形瓶身）、`tall`（细长柱形）。玻璃外壳使用 drei 的 `MeshTransmissionMaterial`，参数为 `transmission: 0.95`、`chromaticAberration: 0.04`、`ior: 1.5`，实现基于物理的玻璃折射效果。`Float` 组件为瓶子添加独立于视差系统的自主漂浮动效。80 个实例化金色粒子（`InstancedMesh`）通过每帧正弦位置偏移环绕场景运动。
+
+### 字体系统
+
+| 角色 | 字体 | 字重 | 用途 |
+|------|------|------|------|
+| 展示 / 标题 | Cormorant Garamond | 300（细体） | Hero 标题、区域标题、产品名称 |
+| 强调 / 斜体 | Cormorant Garamond | 300 Italic | 标题中的金色 `<em>` 元素 |
+| 正文 / UI | DM Sans | 400 | 描述文字、段落文本 |
+| 等宽 / 标签 | DM Mono | 400 | 眉标、导航链接、配方标签、CTA |
+
+所有字号通过 CSS 自定义属性（`--p1` 至 `--p5`）使用 `clamp()` 定义，在移动端和桌面端之间流体缩放。
 
 ---
 
-## Project Structure
+## 技术栈
+
+| 类别 | 技术 | 版本 |
+|------|------|------|
+| 前端框架 | React | 19.2 |
+| 构建工具 | Vite | 7.x |
+| 路由 | Wouter | 3.x |
+| 动画引擎 | GSAP + ScrollTrigger | 3.12 |
+| 3D 渲染 | Three.js | r160 |
+| 3D React 绑定 | React Three Fiber | 8.x |
+| 3D 辅助库 | @react-three/drei | 9.x |
+| 样式 | Tailwind CSS v4 + 自定义 CSS | 4.x |
+| 语言 | TypeScript | 5.6 |
+
+---
+
+## 项目结构
 
 ```
-parfum/
+SILLAGE/
 ├── client/
-│   ├── index.html                  # Google Fonts (Cormorant Garamond, DM Sans, DM Mono)
+│   ├── index.html                  # Google Fonts（Cormorant Garamond、DM Sans、DM Mono）
 │   └── src/
 │       ├── pages/
-│       │   └── Home.tsx            # Main page — all sections, GSAP animations, RAF cursor
+│       │   └── Home.tsx            # 主页面 — 所有区域、GSAP 动画、RAF 光标
 │       ├── components/
-│       │   └── FragranceCanvas.tsx # React Three Fiber scene — bottles, particles, parallax
-│       ├── App.tsx                 # Router + ThemeProvider (dark theme)
-│       ├── index.css               # Design system — CSS variables, all section styles
-│       └── main.tsx                # React entry point
+│       │   └── FragranceCanvas.tsx # React Three Fiber 场景 — 瓶子、粒子、视差
+│       ├── App.tsx                 # 路由 + ThemeProvider（深色主题）
+│       ├── index.css               # 设计系统 — CSS 变量、所有区域样式
+│       └── main.tsx                # React 入口
 ├── server/
-│   └── index.ts                    # Express static server (production)
-├── shared/
-│   └── const.ts
+│   └── index.ts                    # Express 静态服务器（生产环境）
+├── docs/                           # README 图片资源
 └── package.json
 ```
 
 ---
 
-## Getting Started
+## 快速开始
 
-### Prerequisites
+### 环境要求
 
 - Node.js ≥ 18
-- pnpm ≥ 9 (recommended) or npm
+- pnpm ≥ 9（推荐）或 npm
 
-### Installation
+### 安装依赖
 
-```bash
-git clone https://github.com/your-username/sillage-parfum.git
-cd sillage-parfum
+```shell
+git clone https://github.com/shaozheng0503/SILLAGE.git
+cd SILLAGE
 pnpm install
 ```
 
-### Development
+### 开发模式
 
-```bash
+```shell
 pnpm dev
 # → http://localhost:3000
 ```
 
-### Production Build
+### 生产构建
 
-```bash
+```shell
 pnpm build
 pnpm start
 ```
 
 ---
 
-## Design Philosophy
+## 设计哲学
 
-The visual identity is grounded in **Sensory Cartography** — the idea that a fragrance can be "mapped" like a territory, with distinct top, heart, and base coordinates. This translates into the UI as:
+视觉标识基于**感官制图**理念——将香水体验"档案化"，如同绘制一片领土的地图，具有清晰的前调、中调和基调坐标。这在 UI 中体现为：
 
-- **Warm white backgrounds** (`#F5F2EE`) that recede, letting the product photography and 3D objects occupy the foreground
-- **Gold accents** (`#C4975A`) used exclusively for emphasis — never as fill — to preserve their scarcity value
-- **Asymmetric layouts** that alternate direction per product section, creating a sense of editorial pagination rather than a uniform grid
-- **Restrained motion**: all animations use `power4.out` easing and durations of 0.8–1.4s; nothing accelerates into view, everything decelerates out of stillness
-
----
-
-## Inspiration
-
-This project is a creative reinterpretation of [silencio.es](https://silencio.es) — the website for the Paris members' club designed by David Lynch. The original site is notable for its use of GSAP ScrollTrigger, Three.js 3D objects, custom cursor, and scroll-smoother inertia. SILLAGE adapts these techniques for a luxury fragrance context, replacing the club's dark, cinematic atmosphere with a warmer, archival aesthetic.
+- **暖白色背景**（`#F5F2EE`）向后退让，让产品摄影和 3D 对象占据前景
+- **金色点缀**（`#C4975A`）仅用于强调，从不作为填充色，以保持其稀缺感
+- **非对称布局**，每个产品区域交替方向，营造编辑排版的翻页感而非均匀网格
+- **克制的动效**：所有动画使用 `power4.out` 缓动，持续时间 0.8–1.4 秒；没有任何元素加速入场，一切都从静止中减速而出
 
 ---
 
-## License
+## 灵感来源
 
-MIT — free to use, adapt, and build upon.
+本项目是对 [silencio.es](https://silencio.es) 的创意再诠释——这是由 David Lynch 设计的巴黎会员俱乐部网站。原站以其 GSAP ScrollTrigger、Three.js 3D 对象、自定义光标和滚动惯性而著称。SILLAGE 将这些技术移植到高端香水品牌语境中，以更温暖的档案美学取代了俱乐部的黑暗电影氛围。
 
 ---
+
+## 许可证
+
+MIT — 可自由使用、改编和二次开发。
 
 *Built with [Manus AI](https://manus.im)*
